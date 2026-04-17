@@ -1,7 +1,7 @@
-# S2 Opening Prompt — Draft (revised v2)
+# S2 Opening Prompt — Draft (revised v3)
 
 **Status:** Pre-staged draft. Refine in your own voice before pasting to Claude Code.
-**Revision v2:** Six adversarial challenges absorbed — coordination layer scoped correctly, regulatory obligations corrected, client landscape boundary clarified, Agent Teams reframed as decision point, SDK mappings qualified as candidate primitives, DISCIPLINE-1 applied consistently.
+**Revision v3:** Two fixes from pass 3 adversarial review + two Agent Teams clarifications from verified source (Anthropic docs).
 
 ---
 
@@ -50,20 +50,26 @@ KNOWLEDGE CONTRIBUTION:
     - Agent Teams capability is a candidate primitive for 
       multi-agent coordination
   - Agent Teams decision point: Agent Teams is experimental and 
-    disabled by default. This is not a settled constraint — it 
-    is a decision point with three options: (a) accept 
-    experimental status and its instability risk, (b) build a 
-    custom coordination layer to close the six AG-9 gaps 
-    (concurrency, communication, coherence, quorum/consensus, 
-    role-assignment, handover — six per s1-exit-artefact.md §4), 
-    (c) operate single-actor for current-state and defer 
-    multi-actor to target-state pending Agent Teams maturation. 
-    S2 should surface this as an explicit output, not treat it 
-    as pre-decided.
-  - Coordination gap: a custom coordination layer is likely 
-    required to close the gap between Agent Teams primitives and 
-    the six AG-9 concerns. Exact shape is S2 output, not S2 
-    input.
+    disabled by default (source: Anthropic docs, confirmed). 
+    Known limitations: session resumption, task coordination, 
+    shutdown behaviour. Additional constraints: requires Opus 4.6 
+    minimum for all agents — a cost constraint, not just a 
+    stability one. Accessible programmatically via Agent SDK 
+    through ClaudeAgentOptions env configuration.
+    This is a decision point with three options:
+    (a) Accept experimental status and its instability and cost 
+        risks
+    (b) Build a custom coordination layer on top of Agent Teams 
+        or from scratch — likely required under this option to 
+        close the six AG-9 gaps (concurrency, communication, 
+        coherence, quorum/consensus, role-assignment, handover — 
+        six per s1-exit-artefact.md §4). Agent Teams SDK access 
+        via ClaudeAgentOptions provides a concrete starting point 
+        rather than requiring a full custom build.
+    (c) Operate single-actor for current-state and defer 
+        multi-actor to target-state pending Agent Teams maturation
+    S2 surfaces this choice as an explicit output, not a 
+    pre-decided constraint.
   - Dogfooding recursion: 4WRD is being built using 4WRD. Some 
     S1 mechanisms (Need 10 learning retention, Need 14 retirement 
     candidate surfacing, parts of Need 6 policy enforcement via 
@@ -74,6 +80,9 @@ KNOWLEDGE CONTRIBUTION:
     command vacant. Current-state is single-actor. Multi-actor 
     is target-state. S2 must surface where this split makes 
     constraints materially different.
+  - Operational: solo founder capacity is the binding resource 
+    constraint. S2 must assess which constraints are attention-
+    bound, not just cost-bound.
   - Regulatory: baseline data-protection obligations likely apply 
     (PDPA if operating in Singapore; GDPR/CCPA depending on user 
     geography). No sector-specific or contractual regulatory 
@@ -97,27 +106,45 @@ PRIMARY DERIVATION INTENT:
 
 ---
 
-## What changed from draft v1
+## What changed from draft v2
 
-1. **Coordination layer scoped correctly** — "thin shared-state layer" replaced with "custom coordination layer likely required; exact shape is S2 output." Avoids pre-committing to a single component for six architecturally distinct AG-9 gaps.
+1. **Coordination bullet tension resolved** — two separate bullets 
+   (decision point + coordination gap) consolidated into one. Custom 
+   coordination layer is now clearly scoped to option (b), not asserted 
+   as a given across all options.
 
-2. **Regulatory obligations corrected** — "no regulatory obligations yet" replaced with accurate statement: baseline data-protection (PDPA, GDPR/CCPA depending on geography) likely applies now; sector-specific and contractual obligations do not yet apply.
+2. **Operational dimension elaborated** — "solo founder capacity is the 
+   binding resource constraint; S2 must assess which constraints are 
+   attention-bound, not just cost-bound" added to knowledge contribution.
 
-3. **Client landscape boundary clarified** — explicitly out of scope for S2 constraint mapping as binding obligations; explicitly may re-enter as design inputs in S3+ phases.
+3. **Agent Teams cost constraint added** — Opus 4.6 minimum for all agents 
+   confirmed from Anthropic docs. Named as a cost constraint, not just 
+   a stability one.
 
-4. **Agent Teams reframed as decision point** — three options named (accept experimental, build custom, defer to target-state). S2 surfaces the choice rather than inheriting a pre-decision.
+4. **Agent Teams SDK access clarified** — programmatic access via 
+   ClaudeAgentOptions confirmed. Option (b) now notes this as a concrete 
+   starting point rather than requiring a full custom build from scratch.
 
-5. **SDK mappings qualified** — "map to" replaced with "are candidate implementation primitives for" across subagents, hooks, and skills. Equivalence is a hypothesis to verify, not a confirmed fact.
+---
 
-6. **DISCIPLINE-1 applied consistently** — "sixteen reference skills" and "four hook types" now carry source-of-count tags. "Thirteen architectural gaps" tag retained from v1.
+## Review pass summary
+
+- Pass 1: six substantive issues found and absorbed
+- Pass 2: six new issues found and absorbed  
+- Pass 3: two worth-addressing fixes applied, two optional deferred to S2
+- Pass 4 (this version): two Agent Teams clarifications from verified source
+
+Meta-observation from pass 3 adversarial review: returns are diminishing. 
+This draft is ready to paste. Do not request a further review pass.
 
 ---
 
 ## Points to refine in your own voice
 
-- The direction language is mine. Rewrite before pasting — particularly the "two realities" framing.
-- The knowledge contribution is detailed. Trim if over-specified for an Explorative cycle.
-- If your instinct is to start with a specific high-density gap rather than a landscape cycle, rewrite the direction accordingly.
+- The direction language is mine. Rewrite before pasting.
+- The knowledge contribution is detailed. Trim if over-specified.
+- If your instinct is to start with a specific high-density gap rather 
+  than a landscape cycle, rewrite the direction accordingly.
 
 ---
 
@@ -134,4 +161,4 @@ PRIMARY DERIVATION INTENT:
 
 ---
 
-*End of S2 opening prompt draft (revised v2).*
+*End of S2 opening prompt draft (revised v3).*
