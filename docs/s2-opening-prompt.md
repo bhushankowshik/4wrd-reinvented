@@ -1,7 +1,7 @@
-# S2 Opening Prompt — Draft
+# S2 Opening Prompt — Draft (revised)
 
 **Status:** Pre-staged draft. Refine in your own voice before pasting to Claude Code.
-**When to paste:** At the start of your next focused Claude Code session, after S1 persistence and commits are confirmed.
+**Revision:** Implementation target corrected to Claude Agent SDK. S2 scope corrected to harness build constraints only — client regulatory landscape is target-state unknown, not a current constraint.
 
 ---
 
@@ -11,35 +11,63 @@
 CYCLE START
 CONVERGENCE STATE: Explorative
 DIRECTION: Produce a first-pass map of the constraint landscape 
-  that S2 will need to navigate for the full S1 gap register. Do 
-  NOT yet map constraints against individual gaps. Produce:
-  1. A taxonomy of constraint dimensions relevant to 4WRD 
-     (regulatory, technical, organisational, commercial, 
+  that applies to the 4WRD harness build itself. Constraints 
+  are what shapes, limits, or governs the build — not what 
+  4WRD will help clients meet in future.
+
+  Do NOT map constraints against individual gaps yet. Produce:
+  1. A taxonomy of constraint dimensions applicable to this 
+     build (technical platform, organisational, commercial, 
      operational — candidates only, to be refined)
-  2. For each dimension, a first-pass list of likely constraint 
-     sources given the 4WRD context
-  3. An initial scoping assessment — which of the thirteen 
-     architectural gaps are most constrained by which dimensions? 
-     This is a rough heat-map, not a mapping.
+  2. For each dimension, the primary constraint sources as they 
+     exist today for this build
+  3. An initial density assessment — which of the thirteen 
+     architectural gaps (counted from docs/s1-exit-artefact.md 
+     §4: 13 A-tagged) appear constraint-dense vs constraint-
+     sparse, without yet naming which specific constraints apply
+
+  Two realities must be held simultaneously throughout S2:
+  - Current-state: Bhushan as sole human orchestrator, Agent SDK 
+    as implementation platform, no client contracts, no known 
+    regulatory obligations on the harness itself
+  - Target-state: multi-actor coordination as a native primitive, 
+    harness commercially deployed to regulated clients
+  S2 maps constraints on the current-state build. Where a 
+  constraint differs materially between current and target state, 
+  surface the split explicitly rather than collapsing to either.
 
 KNOWLEDGE CONTRIBUTION:
-  - 4WRD implementation target: Anthropic Managed Agents 
-    (single-vendor infrastructure, beta-tier with some features 
-    in research preview — multi-agent orchestration and memory 
-    tooling are in research preview, not public beta)
-  - First live test target: Telco NOC delivery (audit-heavy, 
-    incident-driven, high-consequence)
-  - Secondary targets: Singapore fintech (MAS TRM), critical 
-    infrastructure (CCoP 2.0), government (PDPA, Cybersecurity 
-    Act 2018), aviation (CAAS/ICAO), Cyber Trust Mark
-  - Orchestration model: Bhushan as sole human orchestrator, 
-    second-in-command vacant
-  - Commercial context: Bhushan solo founder. Building 4WRD 
-    using 4WRD (dogfooding). Managed Agents chosen for speed 
-    to first live test.
-  - The thirteen architectural gaps from S1 exit artefact are 
-    the primary mapping target, but the first cycle scopes the 
-    landscape rather than mapping individual gaps.
+  - Implementation target: Claude Agent SDK (Python/TypeScript). 
+    Subagents with isolated context windows map to per-role 
+    context packages. SDK hooks (PreToolUse, PostToolUse, 
+    SessionStart, UserPromptSubmit) map to 4WRD four hook types. 
+    Skills system maps to sixteen reference skills. Agent Teams 
+    capability provides multi-agent coordination primitives. 
+    One custom component needed: thin shared-state layer for 
+    multi-user coordination across sessions.
+  - Platform capability status: Agent SDK is production-grade. 
+    Agent Teams (multi-agent coordination) is experimental and 
+    disabled by default. This is a real constraint on Axis 2 
+    mechanism availability during build.
+  - Dogfooding recursion: 4WRD is being built using 4WRD. Some 
+    S1 mechanisms (Need 10 learning retention, Need 14 retirement 
+    candidate surfacing, parts of Need 6 policy enforcement via 
+    hooks) do not yet exist and cannot be used during this build. 
+    S2 must map constraints against what is available now, not 
+    only against the target design.
+  - Orchestration: Bhushan sole human orchestrator. Second-in-
+    command vacant. Current-state is single-actor. Multi-actor 
+    is target-state. S2 must surface where this split makes 
+    constraints materially different.
+  - Commercial: solo founder, no client contracts signed, no 
+    regulatory obligations on the harness itself yet. Client 
+    regulatory landscape (MAS TRM, CCoP 2.0, PDPA, CAAS/ICAO) 
+    is relevant to what 4WRD will help clients meet — it is not 
+    a current constraint on the build itself. Do not map client 
+    regulatory landscape in S2.
+  - First live test target: Telco NOC. Constraints specific to 
+    that engagement belong in the engagement repo, not in the 
+    harness build.
 
 PRIMARY DERIVATION INTENT: 
   docs/s1-exit-artefact.md (ratified S1 output)
@@ -50,37 +78,41 @@ PRIMARY DERIVATION INTENT:
 
 ---
 
+## What changed from the prior draft
+
+1. **Implementation target corrected** — Claude Agent SDK throughout. Managed Agents removed. Agent Teams experimental status added as a real platform constraint.
+
+2. **S2 scope corrected** — harness build constraints only. Client regulatory landscape explicitly excluded — these are target-state client-side use cases, not current constraints on the build.
+
+3. **Current/target split made explicit** — two realities held simultaneously, but S2 maps current-state. Where the split is material, surface it rather than collapse.
+
+4. **Dogfooding recursion added** — capability floor named upfront so S2 does not map against mechanisms that do not yet exist.
+
+5. **Step 3 reframed** — density assessment without naming specific constraints, to avoid drifting into per-gap mapping inside a landscape cycle.
+
+6. **DISCIPLINE-1 applied** — thirteen architectural gaps tagged with source-of-count.
+
+---
+
 ## Points to refine in your own voice
 
-- The knowledge contribution is in my words. Rewrite in yours. In particular:
-  - The secondary targets list may need to be expanded or narrowed based on your actual commercial pipeline.
-  - Commercial context — add anything about current client conversations or revenue pressure if relevant.
-  - Orchestration model — if you have identified a second-in-command candidate, add it.
-
-- The direction scopes the first cycle as landscape, not mapping. If your instinct is different — if you want to start with a specific high-risk gap like AG-9a (concurrency) — say so and rewrite the direction accordingly.
-
-- If you want S2 to start with a specific first-target focus (Telco NOC constraints specifically, rather than all targets simultaneously), narrow the direction.
+- The direction language is mine. Rewrite before pasting — particularly the "two realities" framing.
+- The knowledge contribution is detailed. Trim if over-specified for an Explorative cycle.
+- If your instinct is to start with a specific high-density gap rather than a landscape cycle, rewrite the direction accordingly.
 
 ---
 
-## Carry-forwards to flag to Claude Code at S2 start
+## Carry-forwards S2 inherits (already in s1-exit-artefact.md)
 
-From S1 close, S2 inherits:
-
-**Seams:**
 - SEAM-1 — Invariant special-class evolution
-- SEAM-1a — Invariant-set initial instantiation  
+- SEAM-1a — Invariant-set initial instantiation
 - SEAM-2a — Recursion depth for meta-governance closure
 - CARRY-FWD-1 — Need 13 partial technical-constraint readiness
-- SEAM-2 procedural — Citation rule: cite s1-exit-artefact for S2-ready articulations; cite S2.3 provenance for Explorative-phase
-
-**Discipline rules:**
-- DISCIPLINE-1 — Source-of-count tagging for numerical claims
-- PROCEDURAL-2 — S2 re-tags A→I (or I→A) for any gap that proves mis-tagged during mapping; reports as discipline note
+- SEAM-2 procedural — Citation rule
+- DISCIPLINE-1 — Source-of-count tagging
+- PROCEDURAL-2 — S2 tag-drift reporting
 - PROCEDURAL-3 — Citation rule (merged into SEAM-2 procedural)
-
-These are already in docs/s1-exit-artefact.md so Claude Code will pick them up via derivation intent.
 
 ---
 
-*End of S2 opening prompt draft.*
+*End of S2 opening prompt draft (revised).*

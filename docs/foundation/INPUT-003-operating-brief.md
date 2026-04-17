@@ -95,7 +95,7 @@ If confirmed — stop production, record what triggered it, wait for new directi
 
 ## 6. Delivery Context
 
-This brief is registered as INPUT-003 for the delivery building 4WRD itself. The implementation target is Anthropic Managed Agents. Claude Code produces the build artefacts. Bhushan is the sole human orchestrator; second-in-command is vacant.
+This brief is registered as INPUT-003 for the delivery building 4WRD itself. The implementation target is the Claude Agent SDK. Claude Code produces the build artefacts. Bhushan is the sole human orchestrator; second-in-command is vacant.
 
 Domain: Software Development Tooling
 Specialisation: Governed Human-AI Delivery Harness — multi-agent, multi-user, SDLC automation

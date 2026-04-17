@@ -130,7 +130,22 @@ This resolves the governance-over-governance concern structurally. Harness evolu
 
 ---
 
-## 9. V4/V5 Carry-Forward Principles
+## 9. Implementation Target
+
+**Claude Agent SDK** (Python or TypeScript). This is the foundational SDK evolved from Claude Code, giving Claude agents a computer — file system, bash, tools — as the primary execution model. Subagents provide isolated context windows. Hooks (PreToolUse, PostToolUse, SessionStart, UserPromptSubmit, and others) provide the event-driven interception points that map to 4WRD's four hooks. The Skills system and Agent Teams capability provide multi-agent coordination primitives.
+
+This is the right target because:
+- It is what the V4 harness was built on — familiar foundation
+- Subagents with isolated context windows map directly to the per-role context package model
+- SDK hooks map directly to 4WRD's four hook types
+- Skills system maps to the sixteen reference skills
+- No infrastructure phase — the SDK provides the execution environment
+
+Multi-user coordination (multiple humans interacting with the same delivery record from different sessions) requires a thin shared-state layer beyond what the SDK provides natively. This is the one custom component — a lightweight shared file system or database that multiple sessions write to.
+
+---
+
+## 10. V4/V5 Carry-Forward Principles
 
 Selected learnings from the phase-gated V4/V5 model are preserved in the reinvented model:
 
@@ -146,7 +161,7 @@ Selected learnings from the phase-gated V4/V5 model are preserved in the reinven
 
 ---
 
-## 10. Known Open Items
+## 11. Known Open Items
 
 Items flagged as design-level concerns to be resolved during implementation or later skills:
 
