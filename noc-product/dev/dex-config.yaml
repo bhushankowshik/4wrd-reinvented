@@ -24,22 +24,22 @@ enablePasswordDB: true
 staticPasswords:
   # bcrypt hash of "password" — DEV ONLY
   - email: operator@example.com
-    hash: "$2a$10$2b2cu2a8W3PDkZ1ZFjwqgO5.bYD9EjL4xWpnBY8/7xMxhXhK1xu0u"
+    hash: "$2b$10$lMimvuZO2J98nJE2XYeGtOxcD7VBwTXCpdFKHsaiOa1RNXh2Y/.KW"
     username: operator
     userID: "op-001"
   - email: supervisor@example.com
-    hash: "$2a$10$2b2cu2a8W3PDkZ1ZFjwqgO5.bYD9EjL4xWpnBY8/7xMxhXhK1xu0u"
+    hash: "$2b$10$lMimvuZO2J98nJE2XYeGtOxcD7VBwTXCpdFKHsaiOa1RNXh2Y/.KW"
     username: supervisor
     userID: "sv-001"
   - email: auditor@example.com
-    hash: "$2a$10$2b2cu2a8W3PDkZ1ZFjwqgO5.bYD9EjL4xWpnBY8/7xMxhXhK1xu0u"
+    hash: "$2b$10$lMimvuZO2J98nJE2XYeGtOxcD7VBwTXCpdFKHsaiOa1RNXh2Y/.KW"
     username: auditor
     userID: "au-001"
   - email: admin@example.com
-    hash: "$2a$10$2b2cu2a8W3PDkZ1ZFjwqgO5.bYD9EjL4xWpnBY8/7xMxhXhK1xu0u"
+    hash: "$2b$10$lMimvuZO2J98nJE2XYeGtOxcD7VBwTXCpdFKHsaiOa1RNXh2Y/.KW"
     username: admin
     userID: "ad-001"
   - email: sre@example.com
-    hash: "$2a$10$2b2cu2a8W3PDkZ1ZFjwqgO5.bYD9EjL4xWpnBY8/7xMxhXhK1xu0u"
+    hash: "$2b$10$lMimvuZO2J98nJE2XYeGtOxcD7VBwTXCpdFKHsaiOa1RNXh2Y/.KW"
     username: sre
     userID: "sr-001"

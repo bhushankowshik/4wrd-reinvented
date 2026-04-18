@@ -125,8 +125,7 @@ def root(request: Request):
 @app.get("/login", response_class=HTMLResponse)
 def login(request: Request, error: str | None = None):
     return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "session": None, "active": None, "error": error},
+        request, "login.html", {"session": None, "active": None, "error": error},
     )
 
 
@@ -258,7 +257,7 @@ def queue(request: Request):
     session = require_session(request)
     rows = _fetch_pending(session)
     return templates.TemplateResponse(
-        "queue.html",
+        request, "queue.html",
         {
             "request": request, "session": session, "active": "queue",
             "rows": rows, "flash": None,
@@ -332,7 +331,7 @@ def recommendation_detail(rid: UUID, request: Request):
         raise HTTPException(404, "recommendation not found")
     csrf = request.cookies.get("noc_rev_csrf") or ""
     return templates.TemplateResponse(
-        "recommendation.html",
+        request, "recommendation.html",
         {
             "request": request, "session": session, "active": "queue",
             "rec": rec, "csrf": csrf, "flash": None,
@@ -511,7 +510,7 @@ def admin_home(request: Request):
     if wal_dir.exists():
         backlog = sum(1 for _ in wal_dir.glob("*.jsonl"))
     return templates.TemplateResponse(
-        "admin.html",
+        request, "admin.html",
         {
             "request": request, "session": session, "active": "admin",
             "chain_health": {"wal_backlog": backlog, "drift_sec": None},
@@ -550,6 +549,5 @@ def history(request: Request):
         for r in raw
     ]
     return templates.TemplateResponse(
-        "history.html",
-        {"request": request, "session": session, "active": "history", "rows": rows},
+        request, "history.html", {"session": session, "active": "history", "rows": rows},
     )
