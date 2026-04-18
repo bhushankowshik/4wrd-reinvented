@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Decision History{% endblock %}
+{% block content %}
+<h2>Decision history</h2>
+{% if not rows %}
+  <div class="card">No decisions yet.</div>
+{% else %}
+<table>
+  <thead><tr>
+    <th>When</th><th>Incident</th><th>Sev</th><th>Rec class</th>
+    <th>Kind</th><th>Operator</th><th>Write-back</th><th></th>
+  </tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr>
+    <td class="muted">{{ r.decision_at_display }}</td>
+    <td><code>{{ r.ctts_incident_ref }}</code></td>
+    <td>{{ r.severity }}</td>
+    <td>{{ r.decision_class }}</td>
+    <td><strong>{{ r.decision_kind }}</strong></td>
+    <td class="muted">{{ r.pseudonymous_operator_id }}</td>
+    <td><code>{{ r.ctts_writeback_state }}</code></td>
+    <td><a href="/recommendation/{{ r.recommendation_id }}">view</a></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

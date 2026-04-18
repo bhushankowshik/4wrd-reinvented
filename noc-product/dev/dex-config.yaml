@@ -1,0 +1,45 @@
+issuer: http://dex:5556/dex
+
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:5556
+
+telemetry:
+  http: 0.0.0.0:5558
+
+oauth2:
+  skipApprovalScreen: true
+
+staticClients:
+  - id: noc-reviewer
+    redirectURIs:
+      - http://localhost:8080/auth/callback
+    name: 'NOC Reviewer UI'
+    secret: noc-reviewer-secret
+
+enablePasswordDB: true
+
+staticPasswords:
+  # bcrypt hash of "password" — DEV ONLY
+  - email: operator@example.com
+    hash: "$2a$10$2b2cu2a8W3PDkZ1ZFjwqgO5.bYD9EjL4xWpnBY8/7xMxhXhK1xu0u"
+    username: operator
+    userID: "op-001"
+  - email: supervisor@example.com
+    hash: "$2a$10$2b2cu2a8W3PDkZ1ZFjwqgO5.bYD9EjL4xWpnBY8/7xMxhXhK1xu0u"
+    username: supervisor
+    userID: "sv-001"
+  - email: auditor@example.com
+    hash: "$2a$10$2b2cu2a8W3PDkZ1ZFjwqgO5.bYD9EjL4xWpnBY8/7xMxhXhK1xu0u"
+    username: auditor
+    userID: "au-001"
+  - email: admin@example.com
+    hash: "$2a$10$2b2cu2a8W3PDkZ1ZFjwqgO5.bYD9EjL4xWpnBY8/7xMxhXhK1xu0u"
+    username: admin
+    userID: "ad-001"
+  - email: sre@example.com
+    hash: "$2a$10$2b2cu2a8W3PDkZ1ZFjwqgO5.bYD9EjL4xWpnBY8/7xMxhXhK1xu0u"
+    username: sre
+    userID: "sr-001"

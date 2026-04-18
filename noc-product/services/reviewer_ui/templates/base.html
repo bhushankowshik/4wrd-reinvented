@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{% block title %}NOC Reviewer{% endblock %}</title>
+<script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+<style>
+  :root { --fg:#111; --muted:#666; --border:#ddd; --accent:#1f6feb;
+          --warn:#b45309; --err:#b91c1c; --ok:#166534; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+         color: var(--fg); margin: 0; background: #fafafa; }
+  header { background:#fff; border-bottom:1px solid var(--border);
+           padding:0.75rem 1.5rem; display:flex; gap:1rem;
+           align-items:center; justify-content:space-between; }
+  header h1 { font-size:1rem; margin:0; font-weight:600; }
+  .nav a { color: var(--fg); text-decoration:none; margin-right:1rem; }
+  .nav a.active { color: var(--accent); font-weight:600; }
+  main { padding:1.5rem; max-width: 1100px; margin:0 auto; }
+  .card { background:#fff; border:1px solid var(--border); border-radius:6px;
+          padding:1rem 1.25rem; margin-bottom:1rem; }
+  .muted { color: var(--muted); }
+  .pill { display:inline-block; padding:0.1rem 0.5rem; border-radius:999px;
+          font-size:0.8rem; border:1px solid var(--border); background:#f3f4f6; }
+  .pill.rem { background:#dcfce7; color: var(--ok); border-color:#86efac; }
+  .pill.field { background:#fef3c7; color: var(--warn); border-color:#fcd34d; }
+  .pill.unavail { background:#fee2e2; color: var(--err); border-color:#fca5a5; }
+  .actions button { margin-right:0.5rem; padding:0.5rem 1rem; border-radius:4px;
+                    border:1px solid var(--border); background:#fff; cursor:pointer; }
+  .actions button.primary { background: var(--accent); color:#fff;
+                             border-color: var(--accent); }
+  .actions button.danger { background:#fff; color: var(--err);
+                            border-color: var(--err); }
+  table { width:100%; border-collapse: collapse; }
+  th, td { text-align:left; padding:0.5rem; border-bottom:1px solid var(--border);
+           vertical-align: top; font-size:0.9rem; }
+  th { background:#f9fafb; font-weight:600; }
+  pre { white-space: pre-wrap; word-break: break-word;
+        background:#f6f8fa; padding:0.75rem; border-radius:4px;
+        font-size:0.85rem; }
+  .flash { padding: 0.6rem 1rem; border-radius:4px; margin-bottom:1rem; }
+  .flash.ok { background:#dcfce7; color: var(--ok); }
+  .flash.err { background:#fee2e2; color: var(--err); }
+  .hint { font-size:0.85rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>4WRD · NOC Reviewer</h1>
+  <nav class="nav">
+    {% if session %}
+      <a href="/queue" class="{% if active=='queue' %}active{% endif %}">Queue</a>
+      <a href="/history" class="{% if active=='history' %}active{% endif %}">History</a>
+      {% if session.role in ('admin','auditor') %}
+      <a href="/admin/" class="{% if active=='admin' %}active{% endif %}">Admin</a>
+      {% endif %}
+      <span class="muted">· {{ session.display_name }} ({{ session.role }})</span>
+      <a href="/logout">Sign out</a>
+    {% else %}
+      <a href="/login">Sign in</a>
+    {% endif %}
+  </nav>
+</header>
+<main>
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

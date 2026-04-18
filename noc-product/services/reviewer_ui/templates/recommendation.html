@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Review · {{ rec.ctts_incident_ref }}{% endblock %}
+{% block content %}
+<h2>Review: <code>{{ rec.ctts_incident_ref }}</code></h2>
+
+{% if flash %}<div class="flash {{ flash.level }}">{{ flash.text }}</div>{% endif %}
+
+<div class="card">
+  <strong>Incident.</strong> <span class="muted">Severity {{ rec.severity }}
+  · Reporting source {{ rec.reporting_source or 'unknown' }}</span>
+  <p>{{ rec.symptom_text }}</p>
+  <p class="muted">Affected nodes:
+    {% for n in rec.affected_nodes %}
+      <code>{{ n.node_id }}</code>{% if n.site %} @ {{ n.site }}{% endif %}{% if not loop.last %}, {% endif %}
+    {% endfor %}
+  </p>
+</div>
+
+<div class="card">
+  <strong>Recommendation —</strong>
+  {% if rec.decision_class == 'REMOTE_RESOLUTION' %}
+    <span class="pill rem">REMOTE_RESOLUTION</span>
+  {% elif rec.decision_class == 'FIELD_DISPATCH' %}
+    <span class="pill field">FIELD_DISPATCH</span>
+  {% else %}
+    <span class="pill unavail">UNAVAILABLE</span>
+  {% endif %}
+  · confidence {{ '%.2f'|format(rec.confidence or 0.0) }}
+  {% if rec.requires_supervisor_review %}
+    · <span class="pill">supervisor review advised</span>
+  {% endif %}
+
+  <h3>Summary</h3>
+  <p>{{ rec.summary }}</p>
+
+  <h3>Proposed actions</h3>
+  {% if rec.proposed_actions %}
+    <ol>{% for a in rec.proposed_actions %}<li>{{ a }}</li>{% endfor %}</ol>
+  {% else %}
+    <p class="muted">(none)</p>
+  {% endif %}
+
+  <h3>Diagnostic summary</h3>
+  <p>{{ rec.diagnostic_summary or '(none)' }}</p>
+
+  {% if rec.correlation_summary %}
+    <h3>Correlation</h3>
+    <pre>{{ rec.correlation_summary | tojson(indent=2) }}</pre>
+  {% endif %}
+
+  <h3>SOP references</h3>
+  {% if rec.sop_references %}
+  <table>
+    <thead><tr><th>SOP</th><th>Section</th><th>Type</th><th>Score</th><th>Excerpt</th></tr></thead>
+    <tbody>
+    {% for s in rec.sop_references %}
+      <tr>
+        <td><code>{{ s.sop_id }}@{{ s.sop_version }}</code></td>
+        <td>{{ s.section_path }}</td>
+        <td class="muted">{{ s.section_type or '—' }}</td>
+        <td>{{ '%.3f'|format(s.score) }}</td>
+        <td class="muted">{{ s.excerpt[:200] }}{% if s.excerpt|length > 200 %}…{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="muted">No SOP excerpts retrieved.</p>
+  {% endif %}
+
+  <h3>Per-agent status</h3>
+  <pre>{{ rec.per_agent_status | tojson(indent=2) }}</pre>
+</div>
+
+{% if not rec.decided %}
+<div class="card">
+  <h3>Decision</h3>
+  <div class="actions">
+    <form method="post" action="/recommendation/{{ rec.recommendation_id }}/approve"
+          style="display:inline;"
+          hx-post="/recommendation/{{ rec.recommendation_id }}/approve"
+          hx-target="body" hx-swap="outerHTML">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="primary" type="submit">Approve</button>
+    </form>
+
+    <form method="post" action="/recommendation/{{ rec.recommendation_id }}/reject"
+          style="display:inline-block; vertical-align:top;">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <select name="reason_code" required>
+        <option value="">Reason…</option>
+        <option value="wrong_hypothesis">Wrong diagnosis</option>
+        <option value="sop_not_applicable">SOP not applicable</option>
+        <option value="insufficient_information">Insufficient information</option>
+        <option value="safety_concern">Safety concern</option>
+      </select>
+      <input type="text" name="reason_note" placeholder="Note (optional)" maxlength="500">
+      <button class="danger" type="submit">Reject</button>
+    </form>
+
+    <form method="post" action="/recommendation/{{ rec.recommendation_id }}/override"
+          style="display:inline-block; vertical-align:top;">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <select name="override_action_class" required>
+        <option value="">Override with…</option>
+        <option value="remote_action_other">Remote action (other)</option>
+        <option value="field_dispatch_now">Field dispatch now</option>
+        <option value="escalate_tier3">Escalate to Tier-3</option>
+      </select>
+      <input type="text" name="reason_note" placeholder="Why (required)" maxlength="500" required>
+      <button type="submit">Override</button>
+    </form>
+  </div>
+  <p class="hint">Approve applies the proposed actions. Reject closes the recommendation
+  without write-back. Override replaces the recommended class with an operator-supplied one.</p>
+</div>
+{% else %}
+<div class="card">
+  <h3>Decision</h3>
+  <p><strong>{{ rec.decided.decision_kind | upper }}</strong>
+    by {{ rec.decided.pseudonymous_operator_id }} at {{ rec.decided.decision_at }}</p>
+  {% if rec.decided.reason_code or rec.decided.reason_note %}
+    <p class="muted">{{ rec.decided.reason_code }} — {{ rec.decided.reason_note or '' }}</p>
+  {% endif %}
+  <p>Write-back state: <code>{{ rec.decided.ctts_writeback_state }}</code></p>
+</div>
+{% endif %}
+{% endblock %}

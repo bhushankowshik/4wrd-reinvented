@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Admin · NOC Reviewer{% endblock %}
+{% block content %}
+<h2>Admin</h2>
+<p class="muted">Admin-only operational views.</p>
+
+<div class="card">
+  <h3>Chain-Write health</h3>
+  <p>WAL backlog: <strong>{{ chain_health.wal_backlog }}</strong></p>
+  <p>Last commit drift (s): {{ chain_health.drift_sec or '—' }}</p>
+</div>
+
+<div class="card">
+  <h3>Recent validation failures</h3>
+  <table>
+    <thead><tr><th>When</th><th>Stage</th><th>Rule</th><th>Severity</th><th>Subject</th></tr></thead>
+    <tbody>
+      {% for v in validation_failures %}
+      <tr>
+        <td class="muted">{{ v.detected_at }}</td>
+        <td>{{ v.stage }}</td>
+        <td><code>{{ v.rule_id }}</code></td>
+        <td>{{ v.rule_severity }}</td>
+        <td class="muted">{{ v.subject_ref or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

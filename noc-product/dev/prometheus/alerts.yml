@@ -1,0 +1,77 @@
+groups:
+  - name: noc-product-operational
+    rules:
+      - alert: RecommendationLatencyBreach
+        expr: histogram_quantile(0.95, sum(rate(noc_recommendation_duration_seconds_bucket[5m])) by (le)) > 180
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Recommendation p95 latency exceeded 3 min (NFR-L.1 dev indicator)"
+          runbook: "Check agent timeouts + Ollama host CPU"
+
+      - alert: AgentTimeout
+        expr: increase(noc_agent_timeouts_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent timeout observed — check orchestrator logs"
+          runbook: "services.agents.orchestrator"
+
+      - alert: AgentErrorSpike
+        expr: rate(noc_agent_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent error rate elevated (>6/min)"
+
+      - alert: ChainWalBacklog
+        expr: noc_chain_write_wal_backlog > 100
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Chain-Write WAL backlog above threshold"
+          runbook: "noc-gov reachability + disk pressure on chain-write volume"
+
+      - alert: ValidationFailureRateHigh
+        expr: rate(noc_validation_failures_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validation failure rate elevated"
+
+      - alert: WriteBackFailures
+        expr: increase(noc_writeback_attempts_total{outcome="failed"}[10m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CTTS write-back declared terminal failure"
+          runbook: "Inspect mock-ctts logs; check correlation_token in operator_decision"
+
+      - alert: IntakeIdle
+        expr: rate(noc_intake_ingested_total[15m]) == 0
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "No incidents ingested in last 15 minutes — dev expected if no activity"
+
+  - name: noc-product-capacity
+    rules:
+      - alert: ModelCallErrorRate
+        expr: |
+          (
+            sum(rate(noc_model_calls_total{outcome!="ok"}[5m]))
+            /
+            clamp_min(sum(rate(noc_model_calls_total[5m])), 1)
+          ) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model backend error rate >20% — Ollama may be unhealthy"

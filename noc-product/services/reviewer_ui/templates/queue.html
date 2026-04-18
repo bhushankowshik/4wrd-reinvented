@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Review Queue{% endblock %}
+{% block content %}
+<h2>Review queue</h2>
+<p class="muted">Recommendations awaiting operator review —
+ordered by severity then age.</p>
+
+{% if flash %}<div class="flash {{ flash.level }}">{{ flash.text }}</div>{% endif %}
+
+{% if not rows %}
+  <div class="card">No recommendations pending review.</div>
+{% else %}
+<table>
+  <thead>
+    <tr>
+      <th>Severity</th>
+      <th>Incident</th>
+      <th>Decision class</th>
+      <th>Confidence</th>
+      <th>Produced</th>
+      <th>SOPs</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.severity or '—' }}</td>
+      <td>
+        <code>{{ r.ctts_incident_ref }}</code><br>
+        <span class="muted">{{ r.symptom_text[:100] }}{% if r.symptom_text|length > 100 %}…{% endif %}</span>
+      </td>
+      <td>
+        {% if r.decision_class == 'REMOTE_RESOLUTION' %}
+          <span class="pill rem">remote</span>
+        {% elif r.decision_class == 'FIELD_DISPATCH' %}
+          <span class="pill field">field</span>
+        {% else %}
+          <span class="pill unavail">unavailable</span>
+        {% endif %}
+      </td>
+      <td>{{ '%.2f'|format(r.confidence or 0.0) }}</td>
+      <td class="muted">{{ r.produced_at_display }}</td>
+      <td>{{ r.sop_count }}</td>
+      <td><a href="/recommendation/{{ r.recommendation_id }}">Review →</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

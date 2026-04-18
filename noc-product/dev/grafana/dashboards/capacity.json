@@ -1,0 +1,45 @@
+{
+  "uid": "noc-capacity",
+  "title": "NOC Capacity",
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Intake ingested / 1m by source",
+      "targets": [
+        {"expr": "sum by (reporting_source) (rate(noc_intake_ingested_total[1m]))",
+         "legendFormat": "{{reporting_source}}"}
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+    },
+    {
+      "type": "timeseries",
+      "title": "Write-back attempts / 5m by outcome",
+      "targets": [
+        {"expr": "sum by (outcome) (rate(noc_writeback_attempts_total[5m]))",
+         "legendFormat": "{{outcome}}"}
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+    },
+    {
+      "type": "timeseries",
+      "title": "Model calls / 5m by model + outcome",
+      "targets": [
+        {"expr": "sum by (model, outcome) (rate(noc_model_calls_total[5m]))",
+         "legendFormat": "{{model}} · {{outcome}}"}
+      ],
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+    },
+    {
+      "type": "stat",
+      "title": "Identity-map reverse lookups (24h)",
+      "targets": [
+        {"expr": "sum by (actor_role, outcome) (increase(noc_identity_map_reverse_lookups_total[24h]))",
+         "legendFormat": "{{actor_role}} · {{outcome}}"}
+      ],
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 16}
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 1
+}

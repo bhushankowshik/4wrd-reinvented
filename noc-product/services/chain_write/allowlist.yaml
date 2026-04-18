@@ -1,0 +1,38 @@
+# AG-3 entry_type allowlist — E5 §1.11 + E3 §4.2 authoritative.
+# Chain-Write stub validates every emit against this file at
+# service start (fail-fast on unknown entry_type) and per call.
+# Adding an entry_type requires editing this file AND the
+# governance_chain trigger contract.
+
+allowed_entry_types:
+  # E3 §4.2 canonical set
+  - intake
+  - ticket_rejected_malformed
+  - agent_output
+  - recommendation
+  - operator_decision
+  - unavailable
+  - sop_reference
+  - test_corpus_generation
+  - chain_integrity_check
+
+  # E5 §1.11 additive set
+  - key_rotation
+  - key_revocation
+  - identity_issuance
+  - identity_retirement
+  - identity_map_access
+  - identity_map_access_bulk_joint
+  - sop_ingest_run_start
+  - sop_ingest_sme_decision
+  - sop_version_activate
+  - sop_version_deprecate
+  - sop_chunk_archive_move
+  - validation_failure
+  - partition_seal
+  - staging_integrity_verified
+  - ctts_writeback_outcome
+  - problem_created
+  - problem_linked
+  - problem_closed
+  - export_bundle_generated

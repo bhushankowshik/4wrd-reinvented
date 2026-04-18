@@ -1,0 +1,362 @@
+name: noc-product
+
+networks:
+  noc-prod-net:
+    driver: bridge
+  noc-data-net:
+    driver: bridge
+  noc-model-net:
+    driver: bridge
+
+volumes:
+  noc-data-pgdata:
+  noc-gov-pgdata:
+  minio-data:
+  vault-data:
+  chain-wal:
+  prometheus-data:
+  grafana-data:
+  loki-data:
+
+services:
+
+  # -------------------- Data substrate --------------------
+
+  noc-data:
+    image: pgvector/pgvector:pg16
+    container_name: noc-data
+    environment:
+      POSTGRES_USER: noc
+      POSTGRES_PASSWORD: noc
+      POSTGRES_DB: noc_data
+    ports:
+      - "5433:5432"
+    volumes:
+      - noc-data-pgdata:/var/lib/postgresql/data
+      - ./db/init/noc_data_init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    networks:
+      - noc-data-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U noc -d noc_data"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  noc-gov:
+    image: pgvector/pgvector:pg16
+    container_name: noc-gov
+    environment:
+      POSTGRES_USER: noc
+      POSTGRES_PASSWORD: noc
+      POSTGRES_DB: noc_gov
+    ports:
+      - "5434:5432"
+    volumes:
+      - noc-gov-pgdata:/var/lib/postgresql/data
+      - ./db/init/noc_gov_init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    networks:
+      - noc-data-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U noc -d noc_gov"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - noc-data-net
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-root-token
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      SKIP_SETCAP: "true"
+      VAULT_DISABLE_MLOCK: "true"
+    ports:
+      - "8200:8200"
+    volumes:
+      - vault-data:/vault/file
+    networks:
+      - noc-data-net
+    command: server -dev -dev-root-token-id=dev-root-token -dev-listen-address=0.0.0.0:8200
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8200/v1/sys/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  dex:
+    image: ghcr.io/dexidp/dex:latest
+    container_name: dex
+    ports:
+      - "5556:5556"
+    volumes:
+      - ./dev/dex-config.yaml:/etc/dex/config.yaml:ro
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    networks:
+      - noc-prod-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5556/dex/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # -------------------- Chain-Write stub --------------------
+
+  chain-write:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile
+    container_name: chain-write
+    command: ["uvicorn", "services.chain_write.app:app", "--host", "0.0.0.0", "--port", "7001"]
+    env_file: .env
+    environment:
+      SERVICE_NAME: chain-write
+    ports:
+      - "7001:7001"
+    volumes:
+      - chain-wal:/var/wal
+      - ./services:/app/services:ro
+    networks:
+      - noc-data-net
+    depends_on:
+      noc-gov:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:7001/healthz')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # -------------------- Product services --------------------
+
+  mock-ctts:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile
+    container_name: mock-ctts
+    command: ["uvicorn", "services.mock_ctts.app:app", "--host", "0.0.0.0", "--port", "8001"]
+    env_file: .env
+    environment:
+      SERVICE_NAME: mock-ctts
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./services:/app/services:ro
+    networks:
+      - noc-prod-net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8001/healthz')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  identity-audit-api:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile
+    container_name: identity-audit-api
+    command: ["uvicorn", "services.identity_audit_api.app:app", "--host", "0.0.0.0", "--port", "7005"]
+    env_file: .env
+    environment:
+      SERVICE_NAME: identity-audit-api
+    ports:
+      - "7005:7005"
+    volumes:
+      - ./services:/app/services:ro
+    networks:
+      - noc-data-net
+      - noc-prod-net
+    depends_on:
+      noc-gov:
+        condition: service_healthy
+      chain-write:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:7005/healthz')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  intake:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile
+    container_name: intake
+    command: ["python", "-m", "services.intake.worker"]
+    env_file: .env
+    environment:
+      SERVICE_NAME: intake
+    volumes:
+      - ./services:/app/services:ro
+      - chain-wal:/var/wal:ro
+    networks:
+      - noc-data-net
+      - noc-prod-net
+    depends_on:
+      noc-data:
+        condition: service_healthy
+      chain-write:
+        condition: service_healthy
+      mock-ctts:
+        condition: service_healthy
+
+  agents:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile
+    container_name: agents
+    command: ["uvicorn", "services.agents.app:app", "--host", "0.0.0.0", "--port", "7002"]
+    env_file: .env
+    environment:
+      SERVICE_NAME: agents
+    ports:
+      - "7002:7002"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./services:/app/services:ro
+    networks:
+      - noc-data-net
+      - noc-model-net
+      - noc-prod-net
+    depends_on:
+      noc-data:
+        condition: service_healthy
+      chain-write:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:7002/healthz')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  reviewer-ui:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile
+    container_name: reviewer-ui
+    command: ["uvicorn", "services.reviewer_ui.app:app", "--host", "0.0.0.0", "--port", "8080"]
+    env_file: .env
+    environment:
+      SERVICE_NAME: reviewer-ui
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./services:/app/services:ro
+    networks:
+      - noc-data-net
+      - noc-prod-net
+    depends_on:
+      noc-data:
+        condition: service_healthy
+      chain-write:
+        condition: service_healthy
+      identity-audit-api:
+        condition: service_healthy
+      dex:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/healthz')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  write-back:
+    build:
+      context: .
+      dockerfile: dev/Dockerfile
+    container_name: write-back
+    command: ["python", "-m", "services.write_back.worker"]
+    env_file: .env
+    environment:
+      SERVICE_NAME: write-back
+    volumes:
+      - ./services:/app/services:ro
+    networks:
+      - noc-data-net
+      - noc-prod-net
+    depends_on:
+      noc-data:
+        condition: service_healthy
+      chain-write:
+        condition: service_healthy
+      mock-ctts:
+        condition: service_healthy
+
+  # -------------------- Observability --------------------
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./dev/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./dev/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - noc-data-net
+      - noc-prod-net
+      - noc-model-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    volumes:
+      - ./dev/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "9093:9093"
+    networks:
+      - noc-prod-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9093/-/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    ports:
+      - "3030:3000"
+    volumes:
+      - ./dev/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./dev/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    networks:
+      - noc-prod-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health | grep -q ok || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
