@@ -71,3 +71,31 @@ CONVERGENCE STATE: advancing to Targeted
   (3) MVGH delivery timeline anchored to this scope
   (4) Full-stack activation roadmap finalised
   (5) S5 exit artefact structure ready for Exact
+
+---
+
+## Targeted Act 1 Verification + Scope Information
+
+**Date:** 2026-04-18
+
+VERIFICATION: CONFIRMED per above responses.
+
+### Scope dimensions (existing estimate)
+
+- Total effort: 163 person-days
+- Role composition: multiple roles broken down (breakdown to be provided)
+- Schedule duration: not specified in estimate
+- Compliance surface: regulated sector (MAS TRM / financial / critical infrastructure)
+- Rework posture: 3-valued classification adopted (no-buffer-no-tracking / buffer-no-tracking / explicit-tracking)
+- Metric 5 compliance-readiness: non-null — MAS TRM surface applies
+
+### Verification decisions
+
+- MVGH-β 15-element set: finalised
+- AG-3 OVERRIDE-reject with rejection-event node: confirmed
+- Framework-first narrowing order: held
+- Effort normalisation: baseline = total person-weeks; MVGH = solo-elapsed × attention-intensity = effective person-weeks
+- Role-compression mapping: load-bearing for Act 2
+- Rework-visibility: 3-valued
+- Secondary instrumentation: lightweight Layer 2 wiring; cap 2w
+- Convergence state: hold Targeted pending role breakdown
