@@ -9,3 +9,5 @@ __pycache__/
 *.pyo
 .pytest_cache/
 *.pyc
+.env
+.env.*
