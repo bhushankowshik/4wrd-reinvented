@@ -166,3 +166,27 @@ Run S1 at Targeted then Exact against the crystallised
 problem or start fresh with the CAG engagement as the
 first fully governed client delivery under the harness.
 
+
+---
+
+## UI update — 2026-04-19
+
+harness/ui/ is now the primary interaction surface.
+
+- FastAPI + xterm.js browser terminal at localhost:8080
+- Verification panel appears at Moment 3 with 
+  CONFIRMED / PARTIAL / REJECTED buttons
+- PDI auto-populates from last exit artefact for 
+  selected skill, falls back to predecessor skill
+- Kill Process button terminates stuck processes
+- Convergence state tooltip explains each state
+- Start: cd harness/ui && bash run.sh
+
+## Estimator S1 status — 2026-04-19
+
+AI-Assisted Solutioning Estimator S1 is ratified 
+at Exact. S2 is OPEN. Ready to run S2.
+
+Last S1 exit artefact: 
+  harness/docs/s1-cycle-80e8970e-20260419T093341Z.md
+
