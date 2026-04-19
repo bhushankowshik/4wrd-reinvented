@@ -16,11 +16,23 @@ class UnknownEntryTypeError(ValueError):
 
 
 # Harness-internal entry types added on top of the noc-product allowlist.
+#
+# The first group is MVGH-β Wave 1 internals (chain bootstrap, anchoring,
+# sidecar interrupts, integrity scans). The second group is the Claude
+# Agent SDK governed Intent Cycle — the atomic unit per INPUT-001 §2.1:
+#   Moment 1 direction_capture → Moment 2 production + adversarial_challenge
+#   → Moment 3 verification → Moment 4 cycle_close.
 HARNESS_ENTRY_TYPES: set[str] = {
     "genesis",
     "master_anchor",
     "frame_change_detected",
     "integrity_check_result",
+    # Intent Cycle moments (governed delivery harness).
+    "direction_capture",
+    "production",
+    "adversarial_challenge",
+    "verification",
+    "cycle_close",
 }
 
 
