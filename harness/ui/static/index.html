@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>4WRD Harness</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <h1 class="brand">4WRD <span>Harness</span></h1>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Gate status</h2>
+        <button id="refresh-btn" type="button" title="Refresh gate &amp; replay">↻</button>
+      </div>
+      <ul id="gate-list" class="gate-list">
+        <li class="empty">loading…</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Session replay</h2>
+      </div>
+      <ul id="replay-list" class="replay-list">
+        <li class="empty">loading…</li>
+      </ul>
+    </section>
+
+    <p class="footer">localhost:8080 · pty bridge</p>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <label>
+        Skill
+        <select id="skill-select"></select>
+      </label>
+      <label>
+        Convergence
+        <span class="select-with-help">
+          <select id="convergence-select">
+            <option value="Explorative">Explorative</option>
+            <option value="Targeted">Targeted</option>
+            <option value="Exact">Exact</option>
+          </select>
+          <span class="help-icon" tabindex="0" role="button" aria-label="Convergence states explained">
+            ⓘ
+            <span class="help-tooltip" role="tooltip">
+              <strong>Explorative</strong> — broad pass, surface unknowns, introduce structure.<br>
+              <strong>Targeted</strong> — narrow, resolve open uncertainties, name constraints.<br>
+              <strong>Exact</strong> — ratifiable artefact, no open questions that block delivery.
+            </span>
+          </span>
+        </span>
+      </label>
+      <button id="run-btn" type="button">▶ Run Cycle</button>
+      <button id="kill-btn" type="button" class="kill" disabled title="Terminate the running pty subprocess">■ Kill Process</button>
+      <span id="status-pill" class="status idle">idle</span>
+    </div>
+
+    <div class="inputs">
+      <label class="input-label">
+        Direction
+        <textarea id="direction" placeholder="The human direction for Moment 1…" rows="3"></textarea>
+      </label>
+      <label class="input-label">
+        Knowledge contribution <em>(required for Explorative)</em>
+        <textarea id="knowledge" placeholder="Context the agents need…" rows="3"></textarea>
+      </label>
+      <label class="input-label">
+        PDI refs <em>(one per line, optional)</em>
+        <textarea id="pdi" placeholder="docs/foundation/INPUT-001-foundation-v4.md" rows="2"></textarea>
+        <small class="help-text">Primary Derivation Intent — list the documents this cycle derives from. Auto-populated from last exit artefact for this skill.</small>
+      </label>
+    </div>
+
+    <div id="verify-panel" class="verify-panel" hidden>
+      <div class="verify-head">
+        <h3>Moment 3 — Verify</h3>
+        <span class="verify-hint">Harness is awaiting a verdict. Submit here instead of pasting into the terminal.</span>
+      </div>
+      <div class="verify-verdicts">
+        <button type="button" class="verdict confirmed" data-verdict="CONFIRMED">CONFIRMED</button>
+        <button type="button" class="verdict partial"   data-verdict="PARTIAL">PARTIAL</button>
+        <button type="button" class="verdict rejected"  data-verdict="REJECTED">REJECTED</button>
+      </div>
+      <label class="input-label">
+        Verification notes <em>(optional)</em>
+        <textarea id="verify-notes" rows="2" placeholder="What you observed about the producing agent output…"></textarea>
+      </label>
+      <label class="input-label" id="verify-refined-wrap" hidden>
+        Refined direction for next iteration <em>(required for PARTIAL / REJECTED)</em>
+        <textarea id="verify-refined" rows="3" placeholder="Tighter direction the next iteration should honour…"></textarea>
+      </label>
+      <div class="verify-footer">
+        <button id="verify-submit" type="button" hidden>Submit verdict</button>
+        <small id="verify-error" class="help-text error-text" hidden></small>
+      </div>
+    </div>
+
+    <div id="terminal" class="terminal"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+  <script src="/static/terminal.js"></script>
+</body>
+</html>
