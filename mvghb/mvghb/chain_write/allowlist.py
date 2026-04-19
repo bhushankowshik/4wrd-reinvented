@@ -33,6 +33,11 @@ HARNESS_ENTRY_TYPES: set[str] = {
     "adversarial_challenge",
     "verification",
     "cycle_close",
+    # Infrastructure additions (INPUT-001 §§2.3, 2.4, 8; INPUT-002 §3).
+    "research",             # Research Agent (Haiku tier) fact-gathering.
+    "frame_change_signal",  # External sidecar receptor (six-source).
+    "artefact_lineage",     # Primary + incidental references at Moment 4.
+    "tombstone",            # Theory retirement (§8 — silent removal prohibited).
 }
 
 

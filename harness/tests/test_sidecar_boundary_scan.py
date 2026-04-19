@@ -34,7 +34,7 @@ def _ctx(topics, n=5):
 
 
 def test_boundary_scan_no_prior_entries(monkeypatch):
-    from harness import sidecar_integration as sc
+    from harness.sidecar import detector as sc
     monkeypatch.setattr(
         sc, "detect_session_boundary",
         lambda window=25: _ctx(topics=[], n=0),
@@ -45,7 +45,7 @@ def test_boundary_scan_no_prior_entries(monkeypatch):
 
 
 def test_boundary_scan_detects_drift(monkeypatch):
-    from harness import sidecar_integration as sc
+    from harness.sidecar import detector as sc
     monkeypatch.setattr(
         sc, "detect_session_boundary",
         lambda window=25: _ctx(topics=["billing migration", "mas trm"]),
@@ -58,7 +58,7 @@ def test_boundary_scan_detects_drift(monkeypatch):
 
 
 def test_boundary_scan_no_drift_on_topic_overlap(monkeypatch):
-    from harness import sidecar_integration as sc
+    from harness.sidecar import detector as sc
     monkeypatch.setattr(
         sc, "detect_session_boundary",
         lambda window=25: _ctx(topics=["billing migration", "mas trm"]),
@@ -92,7 +92,7 @@ def test_inspect_adversarial_output_emits_frame_change(monkeypatch):
         captured["signal"] = signal
         return uuid4()
 
-    from harness import sidecar_integration as sc
+    from harness.sidecar import detector as sc
     monkeypatch.setattr(sc, "emit_frame_change", fake_emit)
 
     adv = AdversarialOutput(

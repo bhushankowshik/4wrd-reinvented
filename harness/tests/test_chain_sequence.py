@@ -70,7 +70,7 @@ class _RecordingWriter:
 
 def _wire_cycle(writer, artefact_dir: Path, monkeypatch):
     from harness import intent_cycle as ic
-    from harness.sidecar_integration import BoundaryScanResult
+    from harness.sidecar.detector import BoundaryScanResult
     from mvghb.sidecar import SessionContext
 
     monkeypatch.setattr(
@@ -108,6 +108,7 @@ def test_chain_sequence_single_iteration(tmp_path: Path, monkeypatch):
         ("production",           "producing_agent"),
         ("adversarial_challenge","adversarial_agent"),
         ("verification",         "human"),
+        ("artefact_lineage",     "orchestrator"),
         ("cycle_close",          "orchestrator"),
     ]
 
@@ -147,6 +148,7 @@ def test_chain_sequence_with_partial_loop(tmp_path: Path, monkeypatch):
         "direction_capture",
         "production", "adversarial_challenge", "verification",
         "production", "adversarial_challenge", "verification",
+        "artefact_lineage",
         "cycle_close",
     ]
 

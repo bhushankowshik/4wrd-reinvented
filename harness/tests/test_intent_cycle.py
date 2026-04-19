@@ -114,6 +114,15 @@ def tmp_artefact_dir(tmp_path: Path) -> Path:
     return tmp_path / "docs"
 
 
+class FakeResearchAgent:
+    def gather(self, *, direction, primary_derivation_intent, knowledge_contribution):  # noqa: ANN001
+        from harness.agents.research_agent import ResearchOutput
+        return ResearchOutput(
+            findings=["(fake)"], sources=list(primary_derivation_intent),
+            raw="", invoked=True, model="fake-haiku",
+        )
+
+
 def _build_cycle(
     producing,
     adversarial,
@@ -133,12 +142,19 @@ def _build_cycle(
             lambda new_direction, window=25: _empty_scan(),
         )
         monkeypatch.setattr(ic_mod, "commit_anchor", lambda writer=None: None)
+        # Force the Research Agent invocation path to return no findings
+        # so tests don't hit the Anthropic API.
+        monkeypatch.setattr(
+            ic_mod, "should_invoke_research",
+            lambda convergence_state, primary_derivation_intent: False,
+        )
 
     return IntentCycle(
         skill=SKILLS["S1"],
         verifier=verifier,
         producing_agent=producing,
         adversarial_agent=adversarial,
+        research_agent=FakeResearchAgent(),
         writer=writer,
         artefact_dir=artefact_dir,
         max_iterations=max_iterations,
@@ -197,6 +213,7 @@ def test_intent_cycle_converges_on_first_iteration(
         "production",
         "adversarial_challenge",
         "verification",
+        "artefact_lineage",
         "cycle_close",
     ]
 
@@ -244,6 +261,18 @@ def test_intent_cycle_loops_on_partial_verification(
     assert entry_types.count("adversarial_challenge") == 2
     assert entry_types.count("verification") == 2
     assert entry_types.count("cycle_close") == 1
+    assert entry_types.count("artefact_lineage") == 1
+    # Iteration counter must correctly increment across the PARTIAL loop:
+    prod_iters = [
+        e.payload_ref["iteration"] for e in fake_writer.emitted
+        if e.entry_type == "production"
+    ]
+    assert prod_iters == [1, 2]
+    verif_iters = [
+        e.payload_ref["iteration"] for e in fake_writer.emitted
+        if e.entry_type == "verification"
+    ]
+    assert verif_iters == [1, 2]
 
 
 def test_intent_cycle_rejects_invalid_convergence_state():
