@@ -30,6 +30,7 @@ from harness.orchestrator.skill_sequence import (
     EXECUTION_SEQUENCE,
     SOLUTIONING_SEQUENCE,
 )
+from harness.skills import predecessor_of
 
 
 HERE = Path(__file__).parent
@@ -55,6 +56,14 @@ def list_skills() -> JSONResponse:
         for sid in seq.skill_ids:
             skills.append({"skill_id": sid, "sequence": seq.name})
     return JSONResponse({"skills": skills})
+
+
+@app.get("/api/skills/predecessor")
+def skill_predecessor(skill: str) -> JSONResponse:
+    return JSONResponse({
+        "skill_id": skill,
+        "predecessor": predecessor_of(skill),
+    })
 
 
 @app.get("/api/gate")

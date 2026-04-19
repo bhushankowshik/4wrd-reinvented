@@ -337,14 +337,52 @@
     }
   }
 
-  function autoPopulatePdi() {
+  let pdiSourceLabel = null;
+  function ensurePdiSourceLabel() {
+    if (pdiSourceLabel) return pdiSourceLabel;
+    pdiSourceLabel = document.createElement('small');
+    pdiSourceLabel.className = 'help-text pdi-source';
+    pdiSourceLabel.textContent = '';
+    pdiField.parentNode.appendChild(pdiSourceLabel);
+    return pdiSourceLabel;
+  }
+
+  function setPdi(value, sourceLabel) {
+    pdiField.value = value;
+    ensurePdiSourceLabel().textContent = sourceLabel;
+  }
+
+  async function autoPopulatePdi() {
     if (!replayCache) return;
     const skill = skillSelect.value;
     if (!skill) return;
     const frame = replayCache.find((f) => f.skill_id === skill);
-    pdiField.value = (frame && frame.last_artefact_path)
-      ? frame.last_artefact_path
-      : '';
+    if (frame && frame.last_artefact_path) {
+      setPdi(frame.last_artefact_path, `Auto-populated from last ${skill} exit artefact`);
+      return;
+    }
+    // Fall back to the predecessor skill's last exit artefact.
+    let predecessor = null;
+    try {
+      const r = await fetch(
+        `/api/skills/predecessor?skill=${encodeURIComponent(skill)}`,
+      );
+      const j = await r.json();
+      predecessor = j.predecessor;
+    } catch (e) {
+      // network error — leave blank
+    }
+    if (predecessor) {
+      const predFrame = replayCache.find((f) => f.skill_id === predecessor);
+      if (predFrame && predFrame.last_artefact_path) {
+        setPdi(
+          predFrame.last_artefact_path,
+          `Auto-populated from last ${predecessor} exit artefact (predecessor)`,
+        );
+        return;
+      }
+    }
+    setPdi('', '');
   }
 
   skillSelect.addEventListener('change', autoPopulatePdi);
