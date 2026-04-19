@@ -52,12 +52,16 @@ class ProducingContextPackage:
     knowledge_contribution: str | None
     prior_entries: list[PriorEntrySummary] = field(default_factory=list)
     primary_derivation_intent: list[str] = field(default_factory=list)
+    research_block: str | None = None
+    iteration: int = 1
+    prior_verification_notes: str | None = None
 
     def render(self) -> str:
         """Render as the user-message text for the Producing Agent."""
         parts: list[str] = []
         parts.append(f"# Skill: {self.skill_id}")
         parts.append(f"# Convergence state: {self.convergence_state}")
+        parts.append(f"# Iteration: {self.iteration}")
         parts.append("")
         parts.append("## Direction")
         parts.append(self.direction.strip())
@@ -70,6 +74,13 @@ class ProducingContextPackage:
             parts.append("## Primary derivation intent")
             for ref in self.primary_derivation_intent:
                 parts.append(f"- {ref}")
+            parts.append("")
+        if self.research_block:
+            parts.append(self.research_block.strip())
+            parts.append("")
+        if self.prior_verification_notes:
+            parts.append("## Prior iteration verifier notes")
+            parts.append(self.prior_verification_notes.strip())
             parts.append("")
         if self.prior_entries:
             parts.append(f"## Prior chain entries ({len(self.prior_entries)})")
@@ -181,6 +192,9 @@ def build_producing_package(
     knowledge_contribution: str | None,
     primary_derivation_intent: list[str] | None = None,
     max_prior_entries: int = 5,
+    research_block: str | None = None,
+    iteration: int = 1,
+    prior_verification_notes: str | None = None,
 ) -> ProducingContextPackage:
     """Build the Producing Agent's context package.
 
@@ -201,6 +215,9 @@ def build_producing_package(
         knowledge_contribution=knowledge_contribution,
         prior_entries=prior,
         primary_derivation_intent=primary_derivation_intent or [],
+        research_block=research_block,
+        iteration=iteration,
+        prior_verification_notes=prior_verification_notes,
     )
 
 

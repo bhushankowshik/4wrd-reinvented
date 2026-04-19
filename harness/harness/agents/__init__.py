@@ -1,10 +1,25 @@
-"""Claude Agent SDK subagents — Producing + Adversarial personas."""
+"""Claude Agent SDK subagents — Research + Producing + Adversarial."""
+from harness.agents.adversarial_agent import (
+    AdversarialAgent,
+    AdversarialOutput,
+    Challenge,
+)
 from harness.agents.producing_agent import ProducingAgent, ProducingOutput
-from harness.agents.adversarial_agent import AdversarialAgent, AdversarialOutput
+from harness.agents.research_agent import (
+    EMPTY_RESEARCH,
+    ResearchAgent,
+    ResearchOutput,
+    should_invoke as should_invoke_research,
+)
 
 __all__ = [
-    "ProducingAgent",
-    "ProducingOutput",
     "AdversarialAgent",
     "AdversarialOutput",
+    "Challenge",
+    "ProducingAgent",
+    "ProducingOutput",
+    "ResearchAgent",
+    "ResearchOutput",
+    "EMPTY_RESEARCH",
+    "should_invoke_research",
 ]

@@ -37,11 +37,18 @@ from harness.agents.adversarial_agent import (
     AdversarialOutput,
 )
 from harness.agents.producing_agent import ProducingAgent, ProducingOutput
+from harness.agents.research_agent import (
+    EMPTY_RESEARCH,
+    ResearchAgent,
+    ResearchOutput,
+    should_invoke as should_invoke_research,
+)
 from harness.context_package import (
     build_challenge_package,
     build_producing_package,
 )
-from harness.sidecar_integration import (
+from harness.lineage import emit_artefact_lineage, extract_lineage
+from harness.sidecar.detector import (
     SidecarDecision,
     inspect_adversarial_output,
     run_session_boundary_scan,
@@ -146,6 +153,7 @@ class IntentCycle:
         verifier: VerifierCallable,
         producing_agent: ProducingAgent | None = None,
         adversarial_agent: AdversarialAgent | None = None,
+        research_agent: ResearchAgent | None = None,
         writer: ChainWriter | None = None,
         artefact_dir: Path | None = None,
         max_iterations: int = 3,
@@ -162,6 +170,8 @@ class IntentCycle:
             system_prompt=skill.adversarial_system_prompt,
             stream_to=stream_agents_to,
         )
+        self._research = research_agent  # lazily constructed when needed
+        self._stream_to = stream_agents_to
         self._writer = writer or ChainWriter()
         self._artefact_dir = artefact_dir or Path("docs")
         self._max_iterations = max_iterations
@@ -204,6 +214,20 @@ class IntentCycle:
         producing: ProducingOutput | None = None
         adversarial: AdversarialOutput | None = None
         verification: VerifierResponse | None = None
+        prior_notes: str | None = None
+
+        # Research pass — only once, before the first Moment 2.
+        research = self._maybe_research(
+            convergence_state=current_state,
+            direction=current_direction,
+            primary_derivation_intent=moment1.primary_derivation_intent,
+            knowledge_contribution=current_knowledge,
+        )
+        research_rec = self._record_research(
+            cycle_id=cycle_id, research=research,
+        ) if research.invoked else None
+        if research_rec is not None:
+            records.append(research_rec)
 
         while iteration <= self._max_iterations:
             producing, adversarial, prod_rec, adv_rec = self._run_moment2(
@@ -214,6 +238,8 @@ class IntentCycle:
                 knowledge_contribution=current_knowledge,
                 primary_derivation_intent=moment1.primary_derivation_intent,
                 iteration=iteration,
+                research=research,
+                prior_verification_notes=prior_notes,
             )
             records.append(prod_rec)
             records.append(adv_rec)
@@ -264,8 +290,11 @@ class IntentCycle:
                     "PARTIAL/REJECTED verification must carry a "
                     "refined_direction to loop Moment 2."
                 )
-            # Loop back to Moment 2 with refined direction.
+            # Loop back to Moment 2 with refined direction. The iteration
+            # counter threads through every chain entry written on the
+            # next pass so Layer 2 can replay each attempt independently.
             current_direction = verification.refined_direction
+            prior_notes = verification.notes or None
             iteration += 1
 
         if verification is None or verification.outcome != "CONFIRMED":
@@ -294,6 +323,16 @@ class IntentCycle:
             verification=verification,
             records=records,
         )
+        # Artefact lineage — structured refs (primary + incidental) as
+        # their own chain entry, distinct from the cycle_close envelope.
+        lineage_rec = self._record_artefact_lineage(
+            cycle_id=cycle_id,
+            moment1=moment1,
+            producing=producing,  # type: ignore[arg-type]
+            adversarial=adversarial,  # type: ignore[arg-type]
+        )
+        records.append(lineage_rec)
+
         close_entry = self._record_cycle_close(
             cycle_id=cycle_id,
             moment1=moment1,
@@ -338,6 +377,8 @@ class IntentCycle:
         knowledge_contribution: str | None,
         primary_derivation_intent: list[str],
         iteration: int,
+        research: ResearchOutput = EMPTY_RESEARCH,
+        prior_verification_notes: str | None = None,
     ) -> tuple[
         ProducingOutput, AdversarialOutput,
         CycleChainRecord, CycleChainRecord,
@@ -349,6 +390,9 @@ class IntentCycle:
             knowledge_contribution=knowledge_contribution,
             primary_derivation_intent=primary_derivation_intent,
             max_prior_entries=self._context_window,
+            research_block=research.render_for_producing() or None,
+            iteration=iteration,
+            prior_verification_notes=prior_verification_notes,
         )
         producing = self._producing.produce(prod_pkg)
         prod_entry = self._record_production(
@@ -388,6 +432,87 @@ class IntentCycle:
             iteration=iteration,
         )
         return producing, adversarial, prod_rec, adv_rec
+
+    # ---- Research helpers ----
+
+    def _maybe_research(
+        self,
+        *,
+        convergence_state: ConvergenceState,
+        direction: str,
+        primary_derivation_intent: list[str],
+        knowledge_contribution: str | None,
+    ) -> ResearchOutput:
+        """Invoke the Research Agent iff Explorative + refs declared."""
+        if not should_invoke_research(
+            convergence_state=convergence_state,
+            primary_derivation_intent=primary_derivation_intent,
+        ):
+            return EMPTY_RESEARCH
+        agent = self._research or ResearchAgent(stream_to=self._stream_to)
+        return agent.gather(
+            direction=direction,
+            primary_derivation_intent=primary_derivation_intent,
+            knowledge_contribution=knowledge_contribution,
+        )
+
+    def _record_research(
+        self, *, cycle_id: UUID, research: ResearchOutput,
+    ) -> CycleChainRecord:
+        payload = {
+            "cycle_id": str(cycle_id),
+            "skill_id": self._skill.skill_id,
+            "moment": "2-pre",
+            "model": research.model,
+            "findings": research.findings,
+            "sources": research.sources,
+            "raw_length": len(research.raw),
+        }
+        res = self._writer.emit(
+            entry_type="research",
+            actor_id=self.ACTOR_PRODUCING,
+            actor_role="producing_ai",
+            incident_id=None,
+            payload_ref=payload,
+        )
+        return CycleChainRecord(
+            moment="2-pre", entry_type="research",
+            actor_id=self.ACTOR_PRODUCING,
+            chain_id=res.chain_id, timestamp=res.timestamp,
+        )
+
+    # ---- Lineage helpers ----
+
+    def _record_artefact_lineage(
+        self,
+        *,
+        cycle_id: UUID,
+        moment1: Moment1Input,
+        producing: ProducingOutput,
+        adversarial: AdversarialOutput,
+    ) -> CycleChainRecord:
+        challenge_text = " ".join(
+            f"{c.challenge} {c.evidence}" for c in adversarial.challenges
+        )
+        lineage = extract_lineage(
+            cycle_id=cycle_id,
+            skill_id=self._skill.skill_id,
+            primary_derivation_intent=moment1.primary_derivation_intent,
+            output_text=producing.output,
+            reasoning_text=producing.reasoning_trace,
+            challenge_text=challenge_text,
+        )
+        res = emit_artefact_lineage(
+            lineage,
+            actor_id=self.ACTOR_ORCHESTRATOR,
+            actor_role="orchestrator",
+            writer=self._writer,
+        )
+        return CycleChainRecord(
+            moment="4-pre", entry_type="artefact_lineage",
+            actor_id=self.ACTOR_ORCHESTRATOR,
+            chain_id=res.chain_id, timestamp=res.timestamp,
+        )
 
     # ---- Chain emit helpers ----
 

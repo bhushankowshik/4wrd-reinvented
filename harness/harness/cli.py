@@ -29,6 +29,15 @@ from harness.intent_cycle import (
     Moment1Input,
     VerifierResponse,
 )
+from harness.layer2.cli import layer2_group
+from harness.orchestrator.gate import gate_is_open
+from harness.orchestrator.skill_sequence import (
+    EXECUTION_SEQUENCE,
+    SOLUTIONING_SEQUENCE,
+    SkillSequence,
+)
+from harness.retirement.cli import retire_group
+from harness.sidecar.receptor import sidecar_group
 from harness.skills import SKILLS
 
 
@@ -183,6 +192,36 @@ def list_skills() -> None:
     """List available skill IDs."""
     for skill_id, skill in sorted(SKILLS.items()):
         click.echo(f"{skill_id}  {skill.name}")
+
+
+def _pick_sequence(skill_id: str) -> SkillSequence:
+    if skill_id.startswith("S"):
+        return SOLUTIONING_SEQUENCE
+    if skill_id.startswith("E"):
+        return EXECUTION_SEQUENCE
+    raise click.ClickException(
+        f"skill {skill_id!r} does not belong to the S-prefix solutioning "
+        f"sequence or the E-prefix execution sequence."
+    )
+
+
+@main.command("gate")
+@click.option("--skill", required=True, help="Skill id, e.g. S2 / E4.")
+def gate_cmd(skill: str) -> None:
+    """Check the gate for a skill — chain-enforced via cycle_close at Exact."""
+    sequence = _pick_sequence(skill)
+    result = gate_is_open(skill_id=skill, sequence=sequence)
+    if result.open:
+        click.secho(f"[OPEN]   {result.reason}", fg="green", bold=True)
+    else:
+        click.secho(f"[BLOCKED] {result.reason}", fg="red", bold=True)
+        if result.blocking_skill_id:
+            click.echo(f"blocking predecessor: {result.blocking_skill_id}")
+
+
+main.add_command(layer2_group)
+main.add_command(sidecar_group)
+main.add_command(retire_group)
 
 
 if __name__ == "__main__":  # pragma: no cover
