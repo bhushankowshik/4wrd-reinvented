@@ -159,6 +159,22 @@ class Skill:
     producing_system_prompt: str
     adversarial_system_prompt: str
     exit_artefact_template: str
+    fidelity_criteria: tuple[str, ...] = ()
+    predecessor_skill: str | None = None
+    research_agent_hint: str | None = None
+
+
+S1_FIDELITY_CRITERIA = (
+    "Produces a canonical problem statement that distinguishes what the"
+    " human controls from what is given.",
+    "Names in-scope, out-of-scope, and deferred-with-activation-path explicitly"
+    " rather than leaving them implicit.",
+    "Success criteria are observable + verifiable; no vague aspiration.",
+    "Every uncertainty is named — silent TBDs are a failure mode.",
+    "Convergence-state discipline honoured: Explorative introduces structure,"
+    " Targeted narrows, Exact produces ratifiable artefact.",
+    "First-target-bias flags surfaced so downstream cycles can audit.",
+)
 
 
 S1_SKILL = Skill(
@@ -167,4 +183,10 @@ S1_SKILL = Skill(
     producing_system_prompt=S1_PRODUCING_SYSTEM_PROMPT,
     adversarial_system_prompt=S1_ADVERSARIAL_SYSTEM_PROMPT,
     exit_artefact_template=S1_EXIT_ARTEFACT_TEMPLATE,
+    fidelity_criteria=S1_FIDELITY_CRITERIA,
+    predecessor_skill=None,
+    research_agent_hint=(
+        "Skim referenced problem statements or prior-art docs only if the"
+        " direction cites them. S1 output is not literature review."
+    ),
 )
