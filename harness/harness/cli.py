@@ -70,12 +70,14 @@ def _interactive_verifier(
         fg="cyan",
     )
     outcome = _ask_outcome()
-    notes = click.prompt("Verification notes (optional)", default="", show_default=False)
+    click.echo("Verification notes (optional): ", nl=False)
+    sys.stdout.flush()
+    notes = sys.stdin.readline().strip()
     refined: str | None = None
     if outcome != "CONFIRMED":
-        refined = click.prompt(
-            "Refined direction for next iteration", default="", show_default=False,
-        ).strip()
+        click.echo("Refined direction for next iteration: ", nl=False)
+        sys.stdout.flush()
+        refined = sys.stdin.readline().strip()
         if not refined:
             click.secho(
                 "Refined direction required for PARTIAL/REJECTED. "
@@ -90,8 +92,11 @@ def _interactive_verifier(
 
 
 def _ask_outcome() -> str:
+    import sys
     while True:
-        raw = click.prompt("Outcome").strip().upper()
+        click.echo("Outcome: ", nl=False)
+        sys.stdout.flush()
+        raw = sys.stdin.readline().strip().upper()
         if raw in ("CONFIRMED", "PARTIAL", "REJECTED"):
             return raw
         click.secho(
