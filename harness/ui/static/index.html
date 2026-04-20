@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>4WRD Harness</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
@@ -43,11 +44,13 @@
           <h2>Run Panel</h2>
           <span id="run-skill-name" class="run-skill-name">—</span>
         </div>
+
         <div class="run-row">
           <label class="field">
             <span>Skill</span>
             <select id="skill-select"></select>
           </label>
+
           <label class="field">
             <span>
               Convergence
@@ -66,6 +69,7 @@
               <option value="Exact">Exact</option>
             </select>
           </label>
+
           <div class="run-actions">
             <button id="run-btn" type="button" class="btn btn-primary">▶ Run Cycle</button>
             <button id="kill-btn" type="button" class="btn btn-danger" disabled>■ Kill Process</button>
@@ -74,7 +78,8 @@
         </div>
 
         <label class="field field-grow">
-          <span>Direction
+          <span>
+            Direction
             <button id="apply-template-btn" type="button" class="btn btn-ghost btn-xs">
               apply template
             </button>
