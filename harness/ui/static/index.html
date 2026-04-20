@@ -3,109 +3,190 @@
 <head>
   <meta charset="utf-8" />
   <title>4WRD Harness</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <aside class="sidebar">
-    <h1 class="brand">4WRD <span>Harness</span></h1>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark">4WRD</span>
+      <span class="brand-sep">·</span>
+      <span id="project-name" class="project-name">Loading…</span>
+    </div>
+    <div class="current-skill">
+      <span class="lbl">Current</span>
+      <span id="current-skill" class="val">—</span>
+    </div>
+    <nav id="progress-rail" class="progress-rail" aria-label="Skill progress"></nav>
+  </header>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Gate status</h2>
-        <button id="refresh-btn" type="button" title="Refresh gate &amp; replay">↻</button>
-      </div>
-      <ul id="gate-list" class="gate-list">
-        <li class="empty">loading…</li>
-      </ul>
-    </section>
+  <div class="app-body">
+    <aside class="left-pane">
+      <section class="pane-section">
+        <h2>Skill Pipeline</h2>
+        <ul id="skill-pipeline" class="skill-pipeline">
+          <li class="empty">loading…</li>
+        </ul>
+      </section>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Session replay</h2>
-      </div>
-      <ul id="replay-list" class="replay-list">
-        <li class="empty">loading…</li>
-      </ul>
-    </section>
+      <section class="pane-section">
+        <h2 id="history-heading">Cycle History</h2>
+        <ul id="cycle-history" class="cycle-history">
+          <li class="empty">select a skill</li>
+        </ul>
+      </section>
+    </aside>
 
-    <p class="footer">localhost:8080 · pty bridge</p>
-  </aside>
-
-  <main class="main">
-    <div class="topbar">
-      <label>
-        Skill
-        <select id="skill-select"></select>
-      </label>
-      <label>
-        Convergence
-        <span class="select-with-help">
-          <select id="convergence-select">
-            <option value="Explorative">Explorative</option>
-            <option value="Targeted">Targeted</option>
-            <option value="Exact">Exact</option>
-          </select>
-          <span class="help-icon" tabindex="0" role="button" aria-label="Convergence states explained">
-            ⓘ
-            <span class="help-tooltip" role="tooltip">
-              <strong>Explorative</strong> — broad pass, surface unknowns, introduce structure.<br>
-              <strong>Targeted</strong> — narrow, resolve open uncertainties, name constraints.<br>
-              <strong>Exact</strong> — ratifiable artefact, no open questions that block delivery.
+    <main class="main-area">
+      <!-- RUN PANEL -->
+      <section class="card run-panel">
+        <div class="card-head">
+          <h2>Run Panel</h2>
+          <span id="run-skill-name" class="run-skill-name">—</span>
+        </div>
+        <div class="run-row">
+          <label class="field">
+            <span>Skill</span>
+            <select id="skill-select"></select>
+          </label>
+          <label class="field">
+            <span>
+              Convergence
+              <span class="help-icon" tabindex="0" role="button" aria-label="Convergence states">
+                ⓘ
+                <span class="help-tooltip" role="tooltip">
+                  <strong>Explorative</strong> — broad pass, surface unknowns, introduce structure.<br>
+                  <strong>Targeted</strong> — narrow, resolve open uncertainties, name constraints.<br>
+                  <strong>Exact</strong> — ratifiable artefact, no open questions that block delivery.
+                </span>
+              </span>
             </span>
+            <select id="convergence-select">
+              <option value="Explorative">Explorative</option>
+              <option value="Targeted">Targeted</option>
+              <option value="Exact">Exact</option>
+            </select>
+          </label>
+          <div class="run-actions">
+            <button id="run-btn" type="button" class="btn btn-primary">▶ Run Cycle</button>
+            <button id="kill-btn" type="button" class="btn btn-danger" disabled>■ Kill Process</button>
+            <span id="status-pill" class="status idle">idle</span>
+          </div>
+        </div>
+
+        <label class="field field-grow">
+          <span>Direction
+            <button id="apply-template-btn" type="button" class="btn btn-ghost btn-xs">
+              apply template
+            </button>
           </span>
-        </span>
-      </label>
-      <button id="run-btn" type="button">▶ Run Cycle</button>
-      <button id="kill-btn" type="button" class="kill" disabled title="Terminate the running pty subprocess">■ Kill Process</button>
-      <span id="status-pill" class="status idle">idle</span>
-    </div>
+          <textarea id="direction" class="mono" rows="6"
+                    placeholder="The human direction for Moment 1…"></textarea>
+        </label>
 
-    <div class="inputs">
-      <label class="input-label">
-        Direction
-        <textarea id="direction" placeholder="The human direction for Moment 1…" rows="3"></textarea>
-      </label>
-      <label class="input-label">
-        Knowledge contribution <em>(required for Explorative)</em>
-        <textarea id="knowledge" placeholder="Context the agents need…" rows="3"></textarea>
-      </label>
-      <label class="input-label">
-        PDI refs <em>(one per line, optional)</em>
-        <textarea id="pdi" placeholder="docs/foundation/INPUT-001-foundation-v4.md" rows="2"></textarea>
-        <small class="help-text">Primary Derivation Intent — list the documents this cycle derives from. Auto-populated from last exit artefact for this skill.</small>
-      </label>
-    </div>
+        <label class="field field-grow">
+          <span>Knowledge contribution <em>(required for Explorative)</em></span>
+          <textarea id="knowledge" class="mono" rows="4"
+                    placeholder="Context the agents need…"></textarea>
+        </label>
 
-    <div id="verify-panel" class="verify-panel" hidden>
-      <div class="verify-head">
-        <h3>Moment 3 — Verify</h3>
-        <span class="verify-hint">Harness is awaiting a verdict. Submit here instead of pasting into the terminal.</span>
-      </div>
-      <div class="verify-verdicts">
-        <button type="button" class="verdict confirmed" data-verdict="CONFIRMED">CONFIRMED</button>
-        <button type="button" class="verdict partial"   data-verdict="PARTIAL">PARTIAL</button>
-        <button type="button" class="verdict rejected"  data-verdict="REJECTED">REJECTED</button>
-      </div>
-      <label class="input-label">
-        Verification notes <em>(optional)</em>
-        <textarea id="verify-notes" rows="2" placeholder="What you observed about the producing agent output…"></textarea>
-      </label>
-      <label class="input-label" id="verify-refined-wrap" hidden>
-        Refined direction for next iteration <em>(required for PARTIAL / REJECTED)</em>
-        <textarea id="verify-refined" rows="3" placeholder="Tighter direction the next iteration should honour…"></textarea>
-      </label>
-      <div class="verify-footer">
-        <button id="verify-submit" type="button" hidden>Submit verdict</button>
-        <small id="verify-error" class="help-text error-text" hidden></small>
-      </div>
-    </div>
+        <label class="field field-grow">
+          <span>PDI refs <em>(one per line)</em></span>
+          <textarea id="pdi" class="mono" rows="2"
+                    placeholder="docs/foundation/INPUT-001-foundation-v4.md"></textarea>
+          <small id="pdi-source" class="help-text"></small>
+        </label>
+      </section>
 
-    <div id="terminal" class="terminal"></div>
-  </main>
+      <!-- MOMENT INDICATOR -->
+      <section class="card moment-bar">
+        <ol class="moment-steps">
+          <li data-moment="1"><span class="step-num">M1</span><span class="step-lbl">Direction Capture</span></li>
+          <li data-moment="2"><span class="step-num">M2</span><span class="step-lbl">AI Produces</span></li>
+          <li data-moment="3"><span class="step-num">M3</span><span class="step-lbl">Human Verifies</span></li>
+          <li data-moment="4"><span class="step-num">M4</span><span class="step-lbl">Cycle Closes</span></li>
+        </ol>
+        <div id="thinking-indicator" class="thinking-indicator" hidden>
+          <span class="spinner"></span>
+          <span id="thinking-label">agent thinking…</span>
+        </div>
+      </section>
 
-  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
-  <script src="/static/terminal.js"></script>
+      <!-- OUTPUT PANEL WITH TABS -->
+      <section class="card output-panel">
+        <nav class="tab-bar" role="tablist">
+          <button class="tab active" data-tab="output" role="tab">Output</button>
+          <button class="tab" data-tab="reasoning" role="tab">Reasoning</button>
+          <button class="tab" data-tab="challenges" role="tab">
+            Challenges
+            <span id="challenges-count" class="count-badge" hidden>0</span>
+          </button>
+          <button class="tab" data-tab="artefact" role="tab">Artefact</button>
+        </nav>
+        <div class="tab-bodies">
+          <article id="tab-output" class="tab-body active">
+            <div id="output-body" class="md-body">
+              <p class="placeholder">No producing-agent output yet — run a cycle.</p>
+            </div>
+          </article>
+          <article id="tab-reasoning" class="tab-body">
+            <div id="reasoning-body" class="md-body">
+              <p class="placeholder">No reasoning trace yet.</p>
+            </div>
+          </article>
+          <article id="tab-challenges" class="tab-body">
+            <div id="frame-change-banner" class="frame-change-banner" hidden>
+              FRAME_CHANGE signal raised — review the challenges before accepting.
+            </div>
+            <div id="challenges-body">
+              <p class="placeholder">No adversarial challenges yet.</p>
+            </div>
+          </article>
+          <article id="tab-artefact" class="tab-body">
+            <div id="artefact-meta" class="artefact-meta" hidden></div>
+            <div id="artefact-body" class="md-body">
+              <p class="placeholder">No artefact loaded. Cycle history items open here.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- VERIFICATION PANEL -->
+      <section id="verify-panel" class="card verify-panel" hidden>
+        <div class="card-head">
+          <h2>Moment 3 — Verify</h2>
+          <span class="verify-hint">Harness is awaiting a verdict.</span>
+        </div>
+        <div class="verdict-row">
+          <button type="button" class="verdict-btn confirmed" data-verdict="CONFIRMED">
+            CONFIRMED
+          </button>
+          <button type="button" class="verdict-btn partial" data-verdict="PARTIAL">
+            PARTIAL
+          </button>
+          <button type="button" class="verdict-btn rejected" data-verdict="REJECTED">
+            REJECTED
+          </button>
+        </div>
+        <label class="field field-grow">
+          <span>Verification notes <em>(optional)</em></span>
+          <textarea id="verify-notes" class="mono" rows="2"
+                    placeholder="What you observed…"></textarea>
+        </label>
+        <label id="verify-refined-wrap" class="field field-grow" hidden>
+          <span>Refined direction for next iteration <em>(required for PARTIAL / REJECTED)</em></span>
+          <textarea id="verify-refined" class="mono" rows="3"
+                    placeholder="Tighter direction the next iteration should honour…"></textarea>
+        </label>
+        <div class="verify-footer">
+          <button id="verify-submit" type="button" class="btn btn-primary" hidden>Submit verdict</button>
+          <small id="verify-error" class="help-text error-text" hidden></small>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+  <script src="/static/templates.js"></script>
+  <script src="/static/app.js"></script>
 </body>
 </html>
