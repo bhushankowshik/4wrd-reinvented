@@ -433,7 +433,9 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---- Output panel + tabs ---- */
-.output-panel { padding: 0; overflow: hidden; }
+.output-panel { padding: 0; overflow: hidden; min-height: 400px; display: flex; flex-direction: column; }
+.output-panel .tab-bodies { flex: 1; min-height: 0; }
+.output-panel .tab-body.active { height: 100%; min-height: 380px; overflow-y: auto; }
 .tab-bar {
   display: flex;
   gap: 2px;
@@ -619,3 +621,51 @@ body {
 .verdict-btn.partial.selected   { background: var(--amber); color: #2e1e00; }
 .verdict-btn.rejected.selected  { background: var(--red);   color: #fff; }
 .verify-footer { display: flex; align-items: center; gap: 12px; }
+
+/* Submit button — mid-submission state */
+.btn-submitting {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-submitting .spinner {
+  border-top-color: #fff;
+}
+
+/* Neutral info message (repurposes #verify-error as a status line) */
+.help-text.info-text {
+  color: var(--muted);
+}
+
+/* Verify panel — post-submit "awaiting harness" state */
+.verify-panel.verify-submitted {
+  position: relative;
+  padding-top: 42px;
+}
+.verify-panel.verify-submitted::before {
+  content: "✓ Verdict submitted — awaiting harness response";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 9px 14px;
+  background: var(--accent);
+  color: #fff;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-align: center;
+}
+.verify-panel.verify-submitted .verdict-row,
+.verify-panel.verify-submitted > label.field {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.verify-panel.verify-submitted .verdict-btn,
+.verify-panel.verify-submitted textarea {
+  cursor: not-allowed;
+}

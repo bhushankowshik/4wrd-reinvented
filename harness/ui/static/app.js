@@ -84,6 +84,9 @@
         resetOutputs();
         break;
       case "moment":
+        if (verifyState === "submitted" || verifyState === "active") {
+          hideVerifyPanel();
+        }
         setMoment(m.moment, m.label);
         break;
       case "producing_output":
@@ -99,6 +102,9 @@
         renderThinking(m.agent, m.elapsed_s);
         break;
       case "cycle_complete":
+        if (verifyState === "submitted" || verifyState === "active") {
+          hideVerifyPanel();
+        }
         renderCycleComplete(m);
         break;
       case "exit":
@@ -261,28 +267,49 @@
     });
   }
 
-  // ---- Verification panel ----
-  let awaitingVerdict = false;
+  // ---- Verification panel (strict state machine) ----
+  //   hidden    — panel not visible
+  //   active    — panel visible, buttons enabled, accepts clicks
+  //   submitted — panel visible, all buttons disabled, awaiting server
+  let verifyState = "hidden";
   let stagedVerdict = null;
+  function resetVerifyPanelState() {
+    const panel = $("verify-panel");
+    panel.classList.remove("verify-submitted");
+    const submit = $("verify-submit");
+    submit.disabled = false;
+    submit.classList.remove("btn-submitting");
+    submit.textContent = "Submit verdict";
+    submit.hidden = true;
+    document.querySelectorAll(".verdict-btn").forEach((b) => {
+      b.disabled = false;
+      b.classList.remove("selected");
+    });
+    const msg = $("verify-error");
+    msg.hidden = true;
+    msg.textContent = "";
+    msg.classList.remove("info-text");
+    msg.classList.add("error-text");
+  }
   function showVerifyPanel() {
-    awaitingVerdict = true;
+    resetVerifyPanelState();
     stagedVerdict = null;
     $("verify-notes").value = "";
     $("verify-refined").value = "";
     $("verify-refined-wrap").hidden = true;
-    $("verify-submit").hidden = true;
-    $("verify-error").hidden = true;
-    document.querySelectorAll(".verdict-btn").forEach((b) => b.classList.remove("selected"));
     $("verify-panel").hidden = false;
     $("verify-panel").scrollIntoView({ behavior: "smooth", block: "center" });
+    verifyState = "active";
   }
   function hideVerifyPanel() {
-    awaitingVerdict = false;
+    resetVerifyPanelState();
     stagedVerdict = null;
     $("verify-panel").hidden = true;
+    verifyState = "hidden";
   }
   document.querySelectorAll(".verdict-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
+      if (verifyState !== "active") return;
       const v = btn.dataset.verdict;
       $("verify-error").hidden = true;
       if (v === "CONFIRMED") {
@@ -300,19 +327,33 @@
     });
   });
   $("verify-submit").addEventListener("click", () => {
+    if (verifyState !== "active") return;
     if (stagedVerdict) submitVerdict(stagedVerdict);
   });
   function submitVerdict(outcome) {
+    if (verifyState !== "active") return;
     const notes = $("verify-notes").value;
     const refined = $("verify-refined").value;
+    const msg = $("verify-error");
     if (outcome !== "CONFIRMED" && !refined.trim()) {
-      const err = $("verify-error");
-      err.textContent = "Refined direction required for PARTIAL / REJECTED.";
-      err.hidden = false;
+      msg.textContent = "Refined direction required for PARTIAL / REJECTED.";
+      msg.classList.add("error-text");
+      msg.classList.remove("info-text");
+      msg.hidden = false;
       return;
     }
+    verifyState = "submitted";
+    const submit = $("verify-submit");
+    submit.disabled = true;
+    submit.classList.add("btn-submitting");
+    submit.innerHTML = '<span class="spinner"></span> Submitting…';
+    document.querySelectorAll(".verdict-btn").forEach((b) => { b.disabled = true; });
+    $("verify-panel").classList.add("verify-submitted");
     sendWs({ type: "verdict", outcome, notes, refined });
-    hideVerifyPanel();
+    msg.textContent = "Verdict submitted — agents processing…";
+    msg.classList.remove("error-text");
+    msg.classList.add("info-text");
+    msg.hidden = false;
   }
 
   // ---- Run / Kill ----
