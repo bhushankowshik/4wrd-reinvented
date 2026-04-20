@@ -342,18 +342,24 @@
       msg.hidden = false;
       return;
     }
+    // 1. advance state machine
     verifyState = "submitted";
+    // 2. disable all verdict buttons
+    document.querySelectorAll(".verdict-btn").forEach((b) => { b.disabled = true; });
+    // 3. update submit button text
     const submit = $("verify-submit");
     submit.disabled = true;
-    submit.classList.add("btn-submitting");
     submit.innerHTML = '<span class="spinner"></span> Submitting…';
-    document.querySelectorAll(".verdict-btn").forEach((b) => { b.disabled = true; });
+    // 4. add btn-submitting class
+    submit.classList.add("btn-submitting");
     $("verify-panel").classList.add("verify-submitted");
-    sendWs({ type: "verdict", outcome, notes, refined });
+    // 5. show neutral status message
     msg.textContent = "Verdict submitted — agents processing…";
     msg.classList.remove("error-text");
     msg.classList.add("info-text");
     msg.hidden = false;
+    // 6. send to WebSocket (after DOM updates are queued)
+    sendWs({ type: "verdict", outcome, notes, refined });
   }
 
   // ---- Run / Kill ----
@@ -507,10 +513,10 @@
       const j = await r.json();
       state.frames = j.skill_frames || [];
     } catch { state.frames = []; }
-    loadProjectName();
     renderPipeline();
     renderProgressRail();
-    if (state.selectedSkill) updateCycleHistory(state.selectedSkill);
+    const activeSkill = state.selectedSkill || "S1";
+    updateCycleHistory(activeSkill);
     autoPopulatePdi();
   }
 
@@ -639,15 +645,21 @@
   }
   function escapeAttr(s) { return escapeHtml(s); }
 
-  function refreshSidebar() {
-    loadGate();
-    loadReplay();
+  async function refreshSidebar() {
+    await loadGate();
+    await loadReplay();
+    await loadProjectName();
   }
 
   // ---- Boot ----
-  loadSkills().then(() => {
+  async function boot() {
+    await loadSkills();
     const firstSkill = $("skill-select").value;
     if (firstSkill) onSkillSelected(firstSkill);
-  }).then(refreshSidebar);
+    await loadGate();
+    await loadReplay();
+    await loadProjectName();
+  }
+  boot();
   setInterval(refreshSidebar, 30000);
 })();
