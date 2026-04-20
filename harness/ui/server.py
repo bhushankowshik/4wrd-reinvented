@@ -218,16 +218,17 @@ def project_name() -> JSONResponse:
 
 @app.get("/api/artefact")
 def artefact(path: str) -> JSONResponse:
-    """Return exit-artefact markdown. Refuses paths outside the repo."""
+    """Return exit-artefact markdown. Restricted to harness/docs/."""
+    docs_root = (REPO_ROOT / "docs").resolve()
     p = Path(path)
     if not p.is_absolute():
         p = (REPO_ROOT / p).resolve()
     else:
         p = p.resolve()
     try:
-        p.relative_to(REPO_ROOT.resolve())
+        p.relative_to(docs_root)
     except ValueError:
-        raise HTTPException(status_code=400, detail="path escapes repo root")
+        raise HTTPException(status_code=400, detail="path must be under harness/docs/")
     if p.suffix != ".md":
         raise HTTPException(status_code=400, detail="only .md files allowed")
     if not p.is_file():

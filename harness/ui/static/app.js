@@ -561,22 +561,33 @@
       : "—";
     const li = document.createElement("li");
     li.className = `history-row ${frame.last_outcome === "CONFIRMED" ? "ok" : "pending"}`;
+    const path = frame.last_artefact_path || "";
     li.innerHTML = `
       <div class="history-row1">
         <span class="hstate">${escapeHtml(frame.last_convergence_state || "—")}</span>
         <span class="houtcome">${escapeHtml(frame.last_outcome || "—")}</span>
       </div>
       <span class="hts">${escapeHtml(ts)}</span>
-      ${frame.last_artefact_path
-        ? `<button class="btn btn-ghost btn-xs load-art" data-path="${escapeAttr(frame.last_artefact_path)}">open artefact</button>`
+      ${path
+        ? `<button class="btn btn-ghost btn-xs load-art" data-path="${escapeAttr(path)}">open artefact</button>`
         : ""}
     `;
     ul.appendChild(li);
-    const btn = li.querySelector(".load-art");
-    if (btn) btn.addEventListener("click", () => {
-      activateTab("artefact");
-      loadArtefact(btn.dataset.path);
-    });
+    if (path) {
+      li.addEventListener("click", () => openArtefactFromHistory(li, path));
+      const btn = li.querySelector(".load-art");
+      if (btn) btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        openArtefactFromHistory(li, path);
+      });
+    }
+  }
+
+  function openArtefactFromHistory(row, path) {
+    document.querySelectorAll("#cycle-history .history-row").forEach((r) =>
+      r.classList.toggle("selected", r === row));
+    activateTab("artefact");
+    loadArtefact(path);
   }
 
   // ---- Utilities ----

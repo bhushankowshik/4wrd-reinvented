@@ -180,6 +180,7 @@ body {
 .history-row.ok .houtcome { color: var(--green); }
 .history-row .hts { color: var(--muted-2); font-size: 10px; }
 .history-row .load-art { align-self: flex-start; }
+.history-row.selected { background: #20243280; outline: 1px solid var(--accent); }
 
 /* ---- Main area ---- */
 .main-area {
